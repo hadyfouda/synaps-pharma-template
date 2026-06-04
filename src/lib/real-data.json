@@ -1,0 +1,21 @@
+{
+  "lineManager": "Line Manager Name",
+  "dateRange": {
+    "start": "2025-01",
+    "end": "2025-12",
+    "months": 12
+  },
+  "totals": {
+    "sales": 0,
+    "target": 0,
+    "ratio": 0
+  },
+  "monthly": [],
+  "dms": [],
+  "mrs": [],
+  "products": [],
+  "dmMonthly": [],
+  "productMonthly": [],
+  "mrMonthly": [],
+  "mrProduct": []
+}
