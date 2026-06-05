@@ -7,16 +7,10 @@ export const synapsConfig = {
   // Company Info
   company: {
     name: 'Your Company Name',           // e.g. 'EVA Pharma'
-    productLine: 'Your Product Line',    // e.g. 'Eva Insulin'
+    productLine: 'Your Product Line',    // e.g. 'Insulin Line'
     logo: '💊',                          // emoji or URL to logo image
     primaryColor: '#6366f1',             // Brand color (hex)
     accentColor: '#10b981',              // Accent color (hex)
-  },
-
-  // Supabase Connection
-  supabase: {
-    url: import.meta.env.VITE_SUPABASE_URL,
-    anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY,
   },
 
   // Dashboard Settings
@@ -33,9 +27,10 @@ export const synapsConfig = {
     hcoAnalysis: true,                   // Pharmacy/HCO performance tab
     aiInsights: true,                    // AI-powered insights
     exportReports: true,                 // CSV/Excel export
+    performanceAnalysis: true,           // Advanced performance analysis
   },
 
-  // Team structure
+  // Team structure labels
   roles: {
     lineManager: 'Line Manager',
     districtManager: 'District Manager',

@@ -42,7 +42,7 @@ Copy `.env.example` to `.env.local` and fill in your Supabase credentials:
 cp .env.example .env.local
 ```
 
-### 4. Configure the system
+### 4. Customize the system
 Edit `src/synaps.config.ts` to customize:
 - Company name and branding
 - Colors and logo
@@ -50,7 +50,7 @@ Edit `src/synaps.config.ts` to customize:
 - Currency and date settings
 
 ### 5. Set up Supabase
-Run the migration scripts in `supabase/migrations/` to create the database schema.
+Run the migration file in `supabase/migrations/001_schema.sql` in your Supabase SQL editor to create the database schema.
 
 ### 6. Start development server
 ```bash
@@ -65,11 +65,11 @@ synaps-pharma-template/
 │   ├── routes/          # Page components
 │   ├── components/      # Reusable UI components
 │   ├── lib/             # Data fetching, utilities
+│   ├── integrations/    # Supabase client & auth
 │   ├── synaps.config.ts # ← Main configuration file
 │   └── styles.css       # Global styles
 ├── supabase/
 │   └── migrations/      # Database schema
-├── scripts/             # Data import utilities
 ├── .env.example         # Environment variables template
 └── README.md
 ```
@@ -82,6 +82,16 @@ The system uses the following main tables:
 - `rep_assignments` — Rep-to-area mappings
 - `sales_data` — Monthly sales records
 - `pharmacies` — HCO/pharmacy master data
+- `kpi_targets` — Monthly KPI targets
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Your Supabase anon/public key |
+| `SUPABASE_URL` | Supabase URL (server-side) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server-side only) |
 
 ## License
 
