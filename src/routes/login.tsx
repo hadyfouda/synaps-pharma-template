@@ -2,10 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { LogIn, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { synapsConfig } from "@/synaps.config";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Sign in — SYNAPS" }] }),
+  head: () => ({ meta: [{ title: `Sign in — SYNAPS` }] }),
 });
 
 function LoginPage() {
@@ -25,22 +26,24 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-background relative">
-      <form onSubmit={submit} className="relative z-10 w-full max-w-sm bg-white/5 backdrop-blur-sm ring-1 ring-white/20 rounded-xl p-7 shadow-2xl text-white bg-slate-900">
+    <div className="min-h-screen w-full flex items-center justify-center bg-background">
+      <form onSubmit={submit} className="w-full max-w-sm bg-card ring-1 ring-border rounded-xl p-7 shadow-2xl">
         <div className="flex flex-col items-center mb-6">
-          <div className="size-14 mb-3 rounded-full bg-brand/20 grid place-items-center text-3xl">💊</div>
-          <h1 className="text-xl font-bold">Sign in to SYNAPS</h1>
-          <p className="text-xs text-white/60 mt-1 uppercase tracking-wider font-medium text-[10px]">Pharma Sales Intelligence</p>
+          <div className="size-14 mb-3 text-5xl flex items-center justify-center">
+            {synapsConfig.company.logo}
+          </div>
+          <h1 className="text-xl font-bold">{synapsConfig.company.name}</h1>
+          <p className="text-xs text-muted-foreground mt-1">{synapsConfig.company.productLine}</p>
         </div>
         <label className="block text-xs font-medium mb-1">Email</label>
         <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-          className="w-full text-sm bg-white/10 text-white placeholder-white/40 ring-1 ring-white/20 rounded-md px-3 py-2 mb-4 focus:outline-none focus:ring-white/50" />
+          className="w-full text-sm bg-background ring-1 ring-border rounded-md px-3 py-2 mb-4 focus:outline-none focus:ring-primary" />
         <label className="block text-xs font-medium mb-1">Password</label>
         <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-          className="w-full text-sm bg-white/10 text-white placeholder-white/40 ring-1 ring-white/20 rounded-md px-3 py-2 mb-4 focus:outline-none focus:ring-white/50" />
-        {error && <p className="text-xs text-red-200 mb-3 bg-red-500/20 ring-1 ring-red-300/30 rounded-md p-2">{error}</p>}
+          className="w-full text-sm bg-background ring-1 ring-border rounded-md px-3 py-2 mb-4 focus:outline-none focus:ring-primary" />
+        {error && <p className="text-xs text-destructive mb-3 bg-destructive/10 ring-1 ring-destructive/30 rounded-md p-2">{error}</p>}
         <button type="submit" disabled={loading}
-          className="w-full text-sm font-medium bg-slate-950/60 text-white ring-1 ring-white/20 backdrop-blur-md rounded-md py-2.5 flex items-center justify-center gap-2 hover:bg-slate-950/80 disabled:opacity-60">
+          className="w-full text-sm font-medium bg-primary text-primary-foreground rounded-md py-2.5 flex items-center justify-center gap-2 hover:bg-primary/90 disabled:opacity-60">
           {loading ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
           Sign in
         </button>
