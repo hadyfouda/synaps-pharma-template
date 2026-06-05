@@ -1,5 +1,6 @@
 import raw from "./real-data.json";
 import { findLooseMatch, looseNameMatch } from "./name-match";
+import { synapsConfig } from "@/synaps.config";
 
 // ---------- Raw types from JSON ----------
 interface RawMonthly { month: string; sales: number; target: number; ratio: number }
@@ -38,14 +39,15 @@ function loadData(): DataShape {
 const data = loadData();
 
 // ---------- Helpers ----------
-export const fmtEGP = (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Math.round(n));
+export const currency = synapsConfig.dashboard.currency;
+export const fmtCurrency = (n: number) => new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(Math.round(n));
+export const fmtEGP = fmtCurrency; // alias
 export const fmtEGPshort = (n: number) => {
   const v = Math.abs(n);
   if (v >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (v >= 1_000) return (n / 1_000).toFixed(0) + "K";
   return n.toFixed(0);
 };
-// Global price-per-unit derived from product totals (units derived from EGP)
 const _totalProdUnits = (data.products ?? []).reduce((s, p) => s + (p.units ?? 0), 0);
 const _totalProdSales = (data.products ?? []).reduce((s, p) => s + (p.sales ?? 0), 0);
 export const globalUnitPrice = _totalProdUnits > 0 ? _totalProdSales / _totalProdUnits : 0;
@@ -78,15 +80,17 @@ export const lineInfo = {
   months: data.dateRange.months,
 };
 
-// YoY: compare current year vs previous year
-const y24 = data.monthly.filter((m) => m.month >= "2024-01" && m.month <= "2024-10").reduce((s, m) => s + m.sales, 0);
-const y25 = data.monthly.filter((m) => m.month >= "2025-01" && m.month <= "2025-10").reduce((s, m) => s + m.sales, 0);
+// YoY comparison
+const currentYear = new Date().getFullYear();
+const prevYear = currentYear - 1;
+const y_prev = data.monthly.filter((m) => m.month >= `${prevYear}-01` && m.month <= `${prevYear}-10`).reduce((s, m) => s + m.sales, 0);
+const y_curr = data.monthly.filter((m) => m.month >= `${currentYear}-01` && m.month <= `${currentYear}-10`).reduce((s, m) => s + m.sales, 0);
 
 export const kpis = {
   totalSales: data.totals.sales,
   totalTarget: data.totals.target,
-  achievement: (data.totals.sales / data.totals.target) * 100,
-  yoyGrowth: y24 ? ((y25 - y24) / y24) * 100 : 0,
+  achievement: (data.totals.target > 0 ? (data.totals.sales / data.totals.target) * 100 : 0),
+  yoyGrowth: y_prev ? ((y_curr - y_prev) / y_prev) * 100 : 0,
   mrCount: data.mrs.length,
   dmCount: data.dms.length,
   productCount: data.products.length,
@@ -94,8 +98,6 @@ export const kpis = {
 
 // ---------- Monthly ----------
 export const monthly = data.monthly;
-
-// Last 12 months for trend
 export const monthlyTrend = data.monthly.slice(-12);
 
 // Quarters (computed)
@@ -127,11 +129,10 @@ export const dms: DM[] = data.dms.map((d, i) => ({
 }));
 
 // ---------- Products ----------
-const productAr: Record<string, string> = {};
 export interface Product { name: string; arabic: string; sales: number; target: number; units: number; targetUnits: number; ratio: number }
 export const products: Product[] = data.products.map((p) => ({
   name: p.name,
-  arabic: productAr[p.name] ?? p.name,
+  arabic: p.name,
   sales: p.sales,
   target: p.target,
   units: p.units,
@@ -150,11 +151,10 @@ export interface Rep {
   sales: number;
   target: number;
   ratio: number;
-  achievement: number; // alias of ratio
+  achievement: number;
   salesPts: number;
   targetPts: number;
   pointsRatio: number;
-  // Synthesized soft KPIs (no real source yet)
   coverage: number;
   callRate: number;
   doubleVisits: number;
@@ -167,7 +167,6 @@ const aspirations: Aspiration[] = ["District Manager", "Product Specialist", "KA
 
 export const reps: Rep[] = data.mrs.map((m, i) => {
   const ratio = m.ratio;
-  // soft KPIs derived deterministically from ratio so they feel coherent
   const base = Math.min(100, Math.max(40, Math.round(ratio)));
   const skill = (delta: number) => Math.min(100, Math.max(40, base + delta - 5));
   return {
@@ -198,7 +197,7 @@ export const productMonthly = data.productMonthly;
 export const mrMonthly = data.mrMonthly;
 export const mrProduct = data.mrProduct;
 
-// ---------- Events (mock, anchored to today-ish) ----------
+// ---------- Events (template - customize as needed) ----------
 export interface EventItem {
   id: string;
   date: string;
@@ -207,17 +206,9 @@ export interface EventItem {
   type: "Conference" | "Meeting" | "Double Visit" | "Training";
   time: string;
 }
-export const events: EventItem[] = [
-  { id: "e1", date: "2026-05-20", title: "Annual Endocrinology Conference", location: "Steigenberger Hotel", type: "Conference", time: "09:00 AM" },
-  { id: "e2", date: "2026-05-22", title: "Q2 Review Meeting", location: "Head Office", type: "Meeting", time: "11:00 AM" },
-  { id: "e3", date: "2026-05-24", title: `Double Visit with ${reps[0]?.name ?? ""}`, location: reps[0]?.area ?? "", type: "Double Visit", time: "10:30 AM" },
-  { id: "e4", date: "2026-05-26", title: "Product Training", location: "Online — Zoom", type: "Training", time: "02:00 PM" },
-  { id: "e5", date: "2026-05-28", title: "Business Lunch — Internal Medicine Doctors", location: "Hotel", type: "Meeting", time: "01:30 PM" },
-  { id: "e6", date: "2026-06-02", title: `Double Visit with ${reps[1]?.name ?? ""}`, location: reps[1]?.area ?? "", type: "Double Visit", time: "09:30 AM" },
-  { id: "e7", date: "2026-06-05", title: "Partnership Symposium", location: "Hilton Hotel", type: "Conference", time: "10:00 AM" },
-];
+export const events: EventItem[] = [];
 
-// ---------- Projects (mock, tied to real reps) ----------
+// ---------- Projects ----------
 export interface Project {
   id: string;
   repId: string;
@@ -227,20 +218,13 @@ export interface Project {
   status: "Active" | "Completed" | "Delayed";
   dueDate: string;
 }
-export const projects: Project[] = [
-  { id: "p1", repId: reps[0]?.id ?? "r1", title: "Scientific Symposium", description: "Standalone meeting for internal medicine doctors in the area", progress: 80, status: "Active", dueDate: "2026-06-10" },
-  { id: "p2", repId: reps[1]?.id ?? "r2", title: "Awareness Campaign", description: "Activating 3 diabetes centers with educational materials", progress: 100, status: "Completed", dueDate: "2026-05-15" },
-  { id: "p3", repId: reps[2]?.id ?? "r3", title: "Health Insurance Treatment Protocol", description: "Adding product to the diabetes protocol", progress: 60, status: "Active", dueDate: "2026-07-01" },
-  { id: "p4", repId: reps[3]?.id ?? "r4", title: "Round table — Specialists", description: "Meeting of 6 doctors", progress: 35, status: "Delayed", dueDate: "2026-05-30" },
-  { id: "p5", repId: reps[4]?.id ?? "r5", title: "Major Pharmacy Chains Partnership", description: "Availability agreement with 4 pharmacy chains", progress: 70, status: "Active", dueDate: "2026-06-20" },
-];
+export const projects: Project[] = [];
 
 export const skillTrend = [
-  { period: "Q3-2024", product: 64, selling: 60 },
-  { period: "Q4-2024", product: 70, selling: 66 },
-  { period: "Q1-2025", product: 76, selling: 72 },
-  { period: "Q2-2025", product: 80, selling: 76 },
-  { period: "Q3-2025", product: 83, selling: 80 },
+  { period: "Q3", product: 64, selling: 60 },
+  { period: "Q4", product: 70, selling: 66 },
+  { period: "Q1", product: 76, selling: 72 },
+  { period: "Q2", product: 80, selling: 76 },
 ];
 
 // ---------- Lookups ----------
@@ -287,11 +271,8 @@ export const getProductsForRep = (repName: string) => {
   return Array.from(agg.values());
 };
 
-/** Fuzzy lookup: find a legacy Rep card by an arbitrary (possibly slightly
- * different) name from the active list. */
 export const findRepByLooseName = (name: string) =>
   findLooseMatch(name, reps, (r) => r.name);
-/** Fuzzy lookup: find a legacy DM card by an arbitrary name. */
 export const findDMByLooseName = (name: string) =>
   findLooseMatch(name, dms, (d) => d.name);
 
